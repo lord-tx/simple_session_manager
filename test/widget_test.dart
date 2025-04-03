@@ -11,10 +11,35 @@ import 'package:simple_session_manager/simple_session_manager.dart';
 
 void main() {
   testWidgets('Test Session Management', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const SimpleSessionManager(child: MySessionApp()));
+    bool onSessionTimeoutCalled = false;
+    bool onActivityDetectedCalled = false;
 
-    /// Add tests to check if session function is called when needed
+    // Create a custom SimpleSessionManager for testing.
+    await tester.pumpWidget(SimpleSessionManager(
+        sessionMonitor: true,
+        sessionTimeoutDuration: const Duration(seconds: 1),
+        onSessionTimeout: () {
+          onSessionTimeoutCalled = true;
+        },
+        onInactivityTimeout: () {
+          onActivityDetectedCalled = true;
+        },
+        child: const MyBaseApp()));
 
+    // Wait for the session timeout duration (1 second).
+    await tester.pump(const Duration(seconds: 2));
+
+    // Check if onSessionTimeout is called.
+    expect(onSessionTimeoutCalled, true);
+
+    //reset value
+    onSessionTimeoutCalled = false;
+
+    //simulate user tap
+    await tester.tap(find.byType(MyBaseApp));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // Check if onActivityDetected is called.
+    expect(onActivityDetectedCalled, true);
   });
 }
